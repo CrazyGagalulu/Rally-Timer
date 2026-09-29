@@ -27,7 +27,7 @@ button{border:0;border-radius:11px;min-height:46px;padding:0 16px;background:var
 <div class="wrap">
   <div class="top">
     <div><h1>Triple Rally Timer</h1><div class="sub">Synchronize three rallies to hit a building together.</div></div>
-    <div class="clock"><span>Current time</span><strong id="clock">--:--:--</strong></div>
+    <div class="clock"><span>Current UTC time</span><strong id="clock">--:--:--</strong><div id="date" style="margin-top:2px">----</div></div>
   </div>
 
   <section class="panel">
@@ -58,7 +58,7 @@ button{border:0;border-radius:11px;min-height:46px;padding:0 16px;background:var
       <button id="nowPlus" type="button">Start in 10 min</button>
       <button id="calculate" type="button">Calculate</button>
     </div>
-    <div class="hint">Player 1's march time determines the building impact time. Players 2 and 3 are then calculated backward, including the fixed 5:00 rally time and their own march times.</div>
+    <div class="hint">All clock, date, rally start, and countdown times are UTC. Player 1's march time determines the building impact time. Players 2 and 3 are then calculated backward, including the fixed 5:00 rally time and their own march times.</div>
     <div id="error" class="error"></div>
   </section>
 
@@ -110,13 +110,14 @@ function fmt(sec,withSeconds=true){
   const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;
   return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+(withSeconds?':'+String(s).padStart(2,'0'):'');
 }
-function localNowSec(){
+function utcNowSec(){
   const d=new Date();
-  return d.getHours()*3600+d.getMinutes()*60+d.getSeconds()+d.getMilliseconds()/1000;
+  return d.getUTCHours()*3600+d.getUTCMinutes()*60+d.getUTCSeconds()+d.getUTCMilliseconds()/1000;
 }
 function updateClock(){
   const d=new Date();
-  $('clock').textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+  $('clock').textContent=[d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()].map(x=>String(x).padStart(2,'0')).join(':')+' UTC';
+  $('date').textContent=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
   updateCountdown();
 }
 function targetSec(){
@@ -146,12 +147,12 @@ function calculate(){
 }
 function setTargetAfter(minutes){
   const d=new Date(Date.now()+minutes*60000);
-  $('target').value=[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+  $('target').value=[d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
   calculate();
 }
 function updateCountdown(){
   if(!starts.length)return;
-  const now=localNowSec();
+  const now=utcNowSec();
   starts.forEach((s,i)=>{
     let diff=s-now;
     if(diff<-43200)diff+=86400;
